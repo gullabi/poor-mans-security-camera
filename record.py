@@ -3,8 +3,8 @@ import os
 import logging
 import time
 
-from math import isclose
 from datetime import timedelta, datetime
+from subprocess import call
 
 def main(rec_dir):
     if not os.path.exists(rec_dir):
@@ -13,8 +13,8 @@ def main(rec_dir):
         raise IOError()
 
     task = RecTask(rec_dir=rec_dir,
-                   duration=15,
-                   max_hours=0.1)
+                   duration=60*60,
+                   max_hours=15)
     task.start_recording()
 
 class RecTask(object):
@@ -32,6 +32,7 @@ class RecTask(object):
 
     def start_recording(self):
         self.set_recordings()
+        print(self.recording_dates)
         self.record()
         msg = 'task finished successfully'
         logging.info(msg)
@@ -132,7 +133,7 @@ class RecTask(object):
                           '-t', str(duration),
                           '-fps', str(fps)]
         print(' '.join(cmd))
-        time.sleep((end-start).total_seconds())
+        call(cmd) 
 
 if __name__ == "__main__":
     file_path = os.path.dirname(os.path.realpath(__file__))
