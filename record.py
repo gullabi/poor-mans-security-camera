@@ -24,7 +24,7 @@ class RecTask(object):
         self.duration = timedelta(seconds=duration)
         self.max_hours = max_hours # default 3 days
         self.global_end = self.global_start+timedelta(hours=self.max_hours)
-        self.recording_hours = (7,22)
+        self.recording_hours = (7,21)
 
     def __str__(self):
         return 'dir: %s\nstarted at: %s'%(str(self.recdir),
@@ -32,7 +32,6 @@ class RecTask(object):
 
     def start_recording(self):
         self.set_recordings()
-        print(self.recording_dates)
         self.discover_ip()
         msg = 'connected to the network with the ip %s'%self.ip
         logging.info(msg)
@@ -53,7 +52,6 @@ class RecTask(object):
                 # start time is out of the desired recording hours
                 if start.hour < self.recording_hours[0]:
                     # we are in the same day
-                    print('here')
                     start = start.replace(hour=self.recording_hours[0],
                                           minute=0,
                                           second=0,
@@ -145,10 +143,10 @@ class RecTask(object):
                              end.strftime('%Y%m%d_%H%M%S')))+'.h264'
         filepath = os.path.join(self.rec_dir, filename)
         duration = int((end-start).total_seconds()*1000)
-        fps = 12
-        width = 498
-        height = 486
-        roi = '0.5,0.1,0.5,0.5'
+        fps = 8
+        width = 800
+        height = 600
+        roi = '0.1,0.0,0.6,0.6'
         msg = 'taking the footage between %s and %s'%(str(start),
                                                       str(end))
         logging.info(msg)
@@ -171,4 +169,5 @@ if __name__ == "__main__":
                         format="%(asctime)s-%(levelname)s: %(message)s",
                         level=logging.INFO,
                         filemode='a')
-    main(rec_dir)
+    time.sleep(30)
+    main(rec_path)
