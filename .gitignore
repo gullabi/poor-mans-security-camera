@@ -1,2 +1,4 @@
 *.h264
+*.log
+*.txt
 recordings/
