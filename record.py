@@ -4,7 +4,7 @@ import logging
 import time
 
 from datetime import timedelta, datetime
-from subprocess import call
+from subprocess import call, Popen, PIPE
 
 def main(rec_dir):
     if not os.path.exists(rec_dir):
@@ -14,7 +14,7 @@ def main(rec_dir):
 
     task = RecTask(rec_dir=rec_dir,
                    duration=60*60,
-                   max_hours=15)
+                   max_hours=3*24)
     task.start_recording()
 
 class RecTask(object):
@@ -33,6 +33,9 @@ class RecTask(object):
     def start_recording(self):
         self.set_recordings()
         print(self.recording_dates)
+        self.discover_ip()
+        msg = 'connected to the network with the ip %s'%self.ip
+        logging.info(msg)
         self.record()
         msg = 'task finished successfully'
         logging.info(msg)
@@ -71,6 +74,20 @@ class RecTask(object):
             start += self.duration
             end = start + self.duration
 
+    def discover_ip(self):
+        cmd = ['hostname', '--all-ip-addresses']
+        process = Popen(['hostname','--all-ip-addresses'],
+                        stdout=PIPE,
+                        stderr=PIPE)
+        stdout, stderr = process.communicate()
+        self.ip = ''
+        if stderr:
+            msg = 'ip not found with error %s'
+            logging.warning(msg%stderr.decode())
+            self.ip = ''
+        else:
+            self.ip = stdout.decode().strip()
+
     def record(self):
         closeness_duration = 5
         if closeness_duration > self.duration.total_seconds():
@@ -80,6 +97,13 @@ class RecTask(object):
 
         for start, end in self.recording_dates:
             reference_now = datetime.now()
+            self.discover_ip()
+            if self.ip:
+                msg = 'continuing recording, still connected to %s'%self.ip
+            else:
+                msg = 'continuing offline, no ip found'
+            logging.info(msg)
+
             if self.dt_isclose(reference_now, start, 5):
                 start = datetime.now()
                 self.take_footage(start, end)
@@ -121,9 +145,10 @@ class RecTask(object):
                              end.strftime('%Y%m%d_%H%M%S')))+'.h264'
         filepath = os.path.join(self.rec_dir, filename)
         duration = int((end-start).total_seconds()*1000)
-        fps = 4
-        width = 640
-        height = 360
+        fps = 12
+        width = 498
+        height = 486
+        roi = '0.5,0.1,0.5,0.5'
         msg = 'taking the footage between %s and %s'%(str(start),
                                                       str(end))
         logging.info(msg)
@@ -131,6 +156,7 @@ class RecTask(object):
                           '-h', str(height),
                           '-w', str(width),
                           '-t', str(duration),
+                          '-roi', roi,
                           '-fps', str(fps)]
         print(' '.join(cmd))
         call(cmd) 
