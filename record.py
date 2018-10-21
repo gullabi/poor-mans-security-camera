@@ -13,18 +13,18 @@ def main(rec_dir):
         raise IOError()
 
     task = RecTask(rec_dir=rec_dir,
-                   duration=60*60,
+                   duration=20*60,
                    max_hours=3*24)
     task.start_recording()
 
 class RecTask(object):
-    def __init__(self, rec_dir=None, duration=60*60, max_hours=24*3):
+    def __init__(self, rec_dir=None, duration=60*60, max_hours=3*24):
         self.rec_dir = rec_dir
         self.global_start = datetime.now()
         self.duration = timedelta(seconds=duration)
         self.max_hours = max_hours # default 3 days
         self.global_end = self.global_start+timedelta(hours=self.max_hours)
-        self.recording_hours = (7,21)
+        self.recording_hours = (8,21)
 
     def __str__(self):
         return 'dir: %s\nstarted at: %s'%(str(self.recdir),
@@ -41,7 +41,7 @@ class RecTask(object):
 
     def set_recordings(self):
         self.recording_dates = []
-        i=0
+        i = 0
         start = self.global_start
         end = self.global_start + self.duration
         while end < self.global_end:
@@ -65,7 +65,8 @@ class RecTask(object):
                     start += timedelta(days=1)
                 else:
                     msg = 'recording hours skipping logic is somewhere'\
-                          ' unexpected.\nstart hour: %i'%start.hour
+                          ' unexpected.\n'\
+                          'start hour: %i'%start.hour
                     logging.warning(msg)
                 end = start + self.duration
                 self.recording_dates.append((start,end))
@@ -87,7 +88,7 @@ class RecTask(object):
             self.ip = stdout.decode().strip()
 
     def record(self):
-        closeness_duration = 5
+        closeness_duration = 60
         if closeness_duration > self.duration.total_seconds():
             msg = 'duration too short %i'%self.duration
             logging.error(msg)
@@ -102,7 +103,7 @@ class RecTask(object):
                 msg = 'continuing offline, no ip found'
             logging.info(msg)
 
-            if self.dt_isclose(reference_now, start, 5):
+            if self.dt_isclose(reference_now, start, closeness_duration):
                 start = datetime.now()
                 self.take_footage(start, end)
             else:
@@ -146,7 +147,7 @@ class RecTask(object):
         fps = 8
         width = 800
         height = 600
-        roi = '0.1,0.0,0.6,0.6'
+        roi = '0.1,0.35,0.65,0.65'
         msg = 'taking the footage between %s and %s'%(str(start),
                                                       str(end))
         logging.info(msg)
