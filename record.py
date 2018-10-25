@@ -24,7 +24,7 @@ class RecTask(object):
         self.duration = timedelta(seconds=duration)
         self.max_hours = max_hours # default 3 days
         self.global_end = self.global_start+timedelta(hours=self.max_hours)
-        self.recording_hours = (8,21)
+        self.recording_hours = (8,20)
 
     def __str__(self):
         return 'dir: %s\nstarted at: %s'%(str(self.recdir),
@@ -130,6 +130,17 @@ class RecTask(object):
                                                       difference)
                     logging.info(msg)
                     time.sleep(difference)
+                    new_ref = datetime.now()
+                    # non-elegant solution for time savings switch
+                    # TODO do it with while
+                    if start > reference_now:
+                        msg = "less time has passed than expected, "\
+                              "waiting a bit more.\n"\
+                              "now: %s vs (start,end):(%s,%s)"%(str(reference_now),
+                                                               str(start),
+                                                               str(end))
+                        difference = (start - new_ref).total_seconds()
+                        time.sleep(difference)
                     self.take_footage(start, end)
 
     @staticmethod
